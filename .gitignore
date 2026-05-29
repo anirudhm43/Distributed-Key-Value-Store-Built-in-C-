@@ -1,0 +1,4 @@
+kvstore
+*.o
+core
+
