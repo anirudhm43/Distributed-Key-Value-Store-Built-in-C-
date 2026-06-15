@@ -1,7 +1,9 @@
 #include<stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include<pthread.h>
 #include "../include/datastore.h"
+#include "../include/persistence.h"
 
 unsigned hash(char*key){
     unsigned int hash=0;
@@ -15,9 +17,13 @@ void init(HashTable *ht){
     for (int i=0;i<TABLE_SIZE;i++){
         ht->table[i]=NULL;
     }
+
+    pthread_mutex_init(&ht->lock,NULL);
 }
 
 void put(HashTable *ht, char *key, char *value){
+
+    pthread_mutex_lock(&ht->lock);
     unsigned int index=hash(key);
 
     KVPair *newnode=malloc(sizeof(KVPair));
@@ -30,9 +36,11 @@ void put(HashTable *ht, char *key, char *value){
 
     newnode->next=ht->table[index];
     ht->table[index]=newnode;
+    pthread_mutex_unlock(&ht->lock);
 }
 
 char *get(HashTable* ht, char *key){
+        pthread_mutex_lock(&ht->lock);
         unsigned int index=hash(key);
 
         KVPair *temp=ht->table[index];
@@ -43,11 +51,14 @@ char *get(HashTable* ht, char *key){
             }
             temp=temp->next;
         }
+        pthread_mutex_unlock(&ht->lock);
         return NULL;
+        
 }
 
 
 int delete_key(HashTable *ht , char *key){
+    pthread_mutex_lock(&ht->lock);
     unsigned int index=hash(key);
     
     KVPair *temp=ht->table[index];
@@ -65,17 +76,20 @@ int delete_key(HashTable *ht , char *key){
             free(temp->key);
             free(temp->value);
             free(temp);
-            
+            pthread_mutex_unlock(&ht->lock);
             return 1;
         }
         prev=temp;
         temp=temp->next;
 
     }
+    pthread_mutex_unlock(&ht->lock);
     return 0;
+    
 }
 
 int count(HashTable *ht){
+    pthread_mutex_lock(&ht->lock);
     int total=0;
 
 
@@ -88,5 +102,7 @@ int count(HashTable *ht){
         }
         
     }
+    pthread_mutex_unlock(&ht->lock);
     return total;
+    
 }

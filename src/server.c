@@ -9,6 +9,7 @@
 
 #include "../include/server.h"
 #include "../include/datastore.h"
+#include "../include/persistence.h"
 
 #define PORT 8080
 #define BUFFER_SIZE 1024
@@ -24,6 +25,7 @@ void process_command(char *command, char *response){
 
     if(strcmp(operation,"PUT")==0){
         put(&store,key,value);
+        save_database(&store);
         strcpy(response,"OK\n");
     }
     else if(strcmp(operation,"GET")==0){
@@ -37,6 +39,7 @@ void process_command(char *command, char *response){
     }
     else if(strcmp(operation,"DEL")==0){
         if(delete_key(&store,key)){
+            save_database(&store);
             strcpy(response,"Deleted\n");
         }
         else{
@@ -83,7 +86,7 @@ void *handleclient(void *arg){
 
 void start_server(){
     int server_fd;
-    int client_socket;
+    
     struct sockaddr_in server_addr;
 
   

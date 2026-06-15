@@ -3,6 +3,8 @@
 
 #define TABLE_SIZE 100
 
+#include <pthread.h>
+
 typedef struct KVPair {
     char* key;
     char* value;
@@ -12,6 +14,7 @@ typedef struct KVPair {
 
 typedef struct {
     KVPair* table[TABLE_SIZE];
+    pthread_mutex_t lock;
 } HashTable;
 
 void init(HashTable* ht);
