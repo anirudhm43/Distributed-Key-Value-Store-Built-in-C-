@@ -40,20 +40,19 @@ void put(HashTable *ht, char *key, char *value){
 }
 
 char *get(HashTable* ht, char *key){
-        pthread_mutex_lock(&ht->lock);
-        unsigned int index=hash(key);
-
-        KVPair *temp=ht->table[index];
-
-        while(temp!=NULL){
-            if(strcmp(temp->key,key)==0){
-                return temp->value;
-            }
-            temp=temp->next;
+    pthread_mutex_lock(&ht->lock);
+    unsigned int index = hash(key);
+    KVPair *temp=ht->table[index];
+    while(temp!=NULL){
+        if(strcmp(temp->key,key)==0){
+            char *result=temp->value;
+            pthread_mutex_unlock(&ht->lock);
+            return result;
         }
-        pthread_mutex_unlock(&ht->lock);
-        return NULL;
-        
+        temp=temp->next;
+    }
+    pthread_mutex_unlock(&ht->lock);
+    return NULL;
 }
 
 
@@ -105,4 +104,19 @@ int count(HashTable *ht){
     pthread_mutex_unlock(&ht->lock);
     return total;
     
+}
+
+
+void free_store(HashTable* ht){
+    for(int i=0;i<TABLE_SIZE;i++){
+        KVPair* curr = ht->table[i];
+        while(curr){
+            KVPair* temp=curr;
+            curr=curr->next;
+            free(temp);
+        }
+        ht->table[i]=NULL;
+    }
+
+    pthread_mutex_destroy(&ht->lock);
 }

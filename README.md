@@ -1,122 +1,117 @@
-# Day 1 - Core In-Memory Key-Value Store
+# Distributed Multi-Threaded Key-Value Store in C
 
-## Objective
+## Overview
 
-The goal of Day 1 was to design and implement the core datastore for a distributed key-value storage system using the C programming language.
+This project is a production-inspired backend system built entirely in C. It implements a persistent, multi-threaded key-value database that allows multiple TCP clients to connect concurrently and perform operations on a shared in-memory datastore.
 
-The datastore stores key-value pairs in memory and provides efficient insertion, retrieval, deletion, and counting operations.
-
----
-
-## Features Implemented
-
-* Hash table based storage
-* Linked list chaining for collision resolution
-* Dynamic memory allocation
-* Key insertion (PUT)
-* Key retrieval (GET)
-* Key deletion (DELETE)
-* Entry counting (COUNT)
+The project combines concepts from Data Structures, Operating Systems, Computer Networks, DBMS, and Software Engineering to simulate the architecture of real-world systems such as Redis and Memcached.
 
 ---
 
-## Data Structure Design
+## Features
 
-### KVPair Structure
+### Core Features
 
-Each node stores:
+* In-memory key-value datastore
+* Hash table implementation
+* Collision handling using linked lists
+* Dynamic memory management
 
-* Key
-* Value
-* Pointer to next node
+### Networking
 
-```c
-typedef struct KVPair {
-    char key[100];
-    char value[100];
-    struct KVPair* next;
-} KVPair;
-```
+* TCP socket server
+* Custom text-based protocol
+* Multiple remote clients
 
-### Hash Table
+### Concurrency
 
-The hash table consists of an array of buckets.
+* POSIX thread-based client handling
+* Detached worker threads
+* Mutex synchronization
+* Thread-safe datastore access
 
-```c
-typedef struct {
-    KVPair* table[TABLE_SIZE];
-} HashTable;
-```
+### Persistence
 
-Collisions are handled using linked list chaining.
+* File-based storage
+* Automatic database recovery
+* Crash recovery support
+* Save-on-write mechanism
 
----
+### Background Services
 
-## Algorithms Used
+* Periodic checkpointing every 30 seconds
+* Background autosave thread
 
-### Hashing
+### Client Utilities
 
-A hash function converts keys into bucket indices.
+* Interactive CLI client
+* Exit support
+* Protocol validation
 
-```
-index = hash(key) % TABLE_SIZE
-```
+### Reliability
 
-Average complexity:
-
-* Insert: O(1)
-* Search: O(1)
-* Delete: O(1)
-
-Worst case:
-
-* O(n)
+* Server logging
+* Load testing
+* Valgrind memory analysis
+* Build automation using Makefile
 
 ---
 
-## Concepts Learned
+## Technologies Used
 
-* Structures
-* Pointers
-* Linked Lists
-* Dynamic Memory Allocation
-* Hash Tables
-* Collision Handling
-
----
-
-## Outcome
-
-A fully functional in-memory key-value datastore capable of storing and retrieving data efficiently.
-
+* C Programming Language
+* GCC
+* POSIX Threads (pthread)
+* TCP/IP Sockets
+* File I/O
+* Valgrind
+* Make
 
 ---
 
+## Project Structure
 
+kvstore/
 
-# Day 2 - TCP Socket Based Key-Value Server
+├── include/
 
-## Objective
+│   ├── datastore.h
 
-The objective of Day 2 was to transform the standalone datastore into a network-accessible server using TCP socket programming.
+│   ├── persistence.h
 
-Clients can now connect remotely and execute datastore operations through a custom protocol.
+│   └── server.h
+
+├── src/
+
+│   ├── main.c
+
+│   ├── server.c
+
+│   ├── datastore.c
+
+│   ├── persistence.c
+
+│   └── client.c
+
+├── tests/
+
+│   └── load_test.sh
+
+├── Makefile
+
+├── README.md
+
+└── .gitignore
 
 ---
 
-## Features Implemented
+## System Architecture
 
-* TCP server implementation
-* Client-server communication
-* Command processing engine
-* Request-response protocol
-* Integration with Day 1 datastore
+User
 
----
+↓
 
-## Architecture
-
-Client
+CLI Client
 
 ↓
 
@@ -124,210 +119,247 @@ TCP Socket
 
 ↓
 
-Server
+Multi-Threaded Server
 
 ↓
 
-Hash Table Datastore
+Shared Hash Table
+
+↓
+
+Persistence Layer
+
+↓
+
+store.db
+
+↓
+
+Background Checkpoint Thread
 
 ---
 
 ## Supported Commands
 
-### PUT
+PUT <key> <value>
 
-```
-PUT name Anirudh
-```
+GET <key>
 
-Response:
+DEL <key>
 
-```
-OK
-```
-
----
-
-### GET
-
-```
-GET name
-```
-
-Response:
-
-```
-VALUE: Anirudh
-```
-
----
-
-### DEL
-
-```
-DEL name
-```
-
-Response:
-
-```
-DELETED
-```
-
----
-
-### COUNT
-
-```
 COUNT
-```
 
-Response:
+EXIT
 
-```
+---
+
+## Build Instructions
+
+### Clone Repository
+
+git clone <repository-url>
+
+cd kvstore
+
+---
+
+### Compile Everything
+
+make
+
+---
+
+### Compile Server Manually
+
+gcc src/main.c src/server.c src/datastore.c src/persistence.c -o kvstore -pthread
+
+---
+
+### Compile Client Manually
+
+gcc src/client.c -o kvclient
+
+---
+
+## Running the Application
+
+### Start Server
+
+./kvstore
+
+Expected Output:
+
+Server running on port 8080
+
+---
+
+### Start Client
+
+Open another terminal:
+
+./kvclient
+
+Expected:
+
+Connected to KVStore.
+
+Type EXIT to quit.
+
+KVStore>
+
+---
+
+## Example Session
+
+KVStore> PUT name Anirudh
+
+OK
+
+KVStore> GET name
+
+VALUE: Anirudh
+
+KVStore> COUNT
+
 TOTAL: 1
-```
+
+KVStore> DEL name
+
+DELETED
+
+KVStore> EXIT
+
+Disconnected.
 
 ---
 
-## Socket Functions Used
+## Persistence
 
-* socket()
-* bind()
-* listen()
-* accept()
-* recv()
-* send()
+The datastore automatically saves changes to disk.
+
+Example store.db:
+
+name|Anirudh
+
+cgpa|9.2
+
+language|C
+
+On restart, the database restores previous state automatically.
 
 ---
 
-## Concepts Learned
+## Background Checkpointing
 
-### Computer Networks
+A dedicated thread periodically saves snapshots.
 
-* TCP/IP communication
-* Client-server architecture
-* Network protocols
-* Socket programming
+Checkpoint interval:
+
+30 seconds
+
+Console output:
+
+[AUTO-SAVE] Database checkpoint created
+
+---
+
+## Load Testing
+
+Run:
+
+chmod +x tests/load_test.sh
+
+./tests/load_test.sh
+
+Default configuration:
+
+10 Clients
+
+100 Requests Per Client
+
+1000 Total Operations
+
+---
+
+## Memory Analysis
+
+Run:
+
+valgrind --leak-check=full --show-leak-kinds=all ./kvstore
+
+Result:
+
+definitely lost: 0 bytes
+
+indirectly lost: 0 bytes
+
+---
+
+## Logging
+
+Example Logs:
+
+[CONNECT] Client connected
+
+[REQUEST] PUT name Anirudh
+
+[RESPONSE] OK
+
+[DISCONNECT] Client disconnected
+
+---
+
+## Concepts Demonstrated
+
+### Data Structures
+
+* Hash Tables
+* Linked Lists
+* Collision Resolution
 
 ### Operating Systems
 
-* Process communication
-* File descriptors
-* System calls
+* Threads
+* Mutexes
+* Critical Sections
+* Synchronization
+* Background Services
+
+### Computer Networks
+
+* TCP/IP
+* Socket Programming
+* Concurrent Servers
+* Protocol Design
+
+### DBMS
+
+* Durability
+* Checkpointing
+* Crash Recovery
+* Persistence
+
+### Software Engineering
+
+* Modular Design
+* Testing
+* Logging
+* Build Automation
 
 ---
 
-## Outcome
+## Future Enhancements
 
-A working TCP-based key-value server that allows remote clients to interact with the datastore over a network.
-
-
----
-
-
-# Day 3 - Concurrent Multi-Threaded Key-Value Server
-
-## Objective
-
-The objective of Day 3 was to improve scalability by enabling the server to handle multiple clients simultaneously using POSIX threads.
-
-Thread synchronization mechanisms were added to ensure safe access to shared resources.
+* TTL support
+* LRU eviction
+* REST API
+* Replication
+* Pub/Sub
+* Docker deployment
+* Authentication
 
 ---
 
-## Features Implemented
+## Resume Description
 
-* Multi-threaded client handling
-* POSIX thread creation
-* Detached worker threads
-* Mutex synchronization
-* Concurrent client support
-* Thread-safe datastore operations
-
----
-
-## Architecture
-
-```text
-                 Server
-
-                    |
-    -----------------------------------
-    |                |                |
- Thread 1         Thread 2         Thread 3
-    |                |                |
- Client A         Client B         Client C
-
-              Shared HashTable
-                     |
-                 Mutex Lock
-```
-
----
-
-## Concurrency Model
-
-Each client connection is assigned a dedicated worker thread.
-
-```c
-pthread_create(...)
-```
-
-The worker thread:
-
-1. Receives client requests
-2. Processes datastore commands
-3. Sends responses
-4. Terminates when client disconnects
-
----
-
-## Synchronization
-
-Since all threads access the same datastore, mutex locks are used.
-
-```c
-pthread_mutex_lock(...)
-```
-
-```c
-pthread_mutex_unlock(...)
-```
-
-This prevents race conditions and data corruption.
-
----
-
-## Operating System Concepts Applied
-
-### Threads
-
-Multiple execution paths inside a single process.
-
-### Critical Section
-
-Shared datastore access region.
-
-### Race Condition
-
-Prevented using mutex synchronization.
-
-### Mutual Exclusion
-
-Only one thread can modify datastore at a time.
-
----
-
-## Computer Network Concepts Applied
-
-* Concurrent server design
-* Multiple TCP client connections
-* Session management
-* Request-response communication
-
----
-
-## Outcome
-
-A scalable multi-threaded key-value server capable of serving multiple clients concurrently while maintaining data consistency and integrity.
+Built a multi-threaded persistent key-value store in C supporting concurrent TCP clients, mutex-based synchronization, crash recovery, periodic checkpointing, and a custom CLI client. Performed load testing and memory profiling using Valgrind to ensure reliability and memory safety.

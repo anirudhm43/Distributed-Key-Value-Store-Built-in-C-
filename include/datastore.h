@@ -23,5 +23,6 @@ char* get(HashTable* ht, char* key);
 int delete_key(HashTable* ht, char* key);
 
 int count(HashTable* ht);
+void free_store(HashTable* ht);
 
 #endif 

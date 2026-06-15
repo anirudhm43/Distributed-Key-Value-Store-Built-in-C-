@@ -50,7 +50,7 @@ void load_database(HashTable *ht){
 }
 
 
-void autosave_thread(void *arg){
+void *autosave_thread(void *arg){
     HashTable *ht=(HashTable*)arg;
 
     while(1){

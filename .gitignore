@@ -1,4 +1,14 @@
+# Executables
 kvstore
+kvclient
+
+
+# Object files
 *.o
-core
+
+# Logs
+*.log
+
+# Valgrind outputs
+vgcore.*
 
